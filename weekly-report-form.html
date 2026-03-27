@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>周报填写页</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --panel: rgba(255, 251, 243, 0.94);
+      --panel-strong: #fffaf1;
+      --text: #1f2a26;
+      --muted: #5f6c66;
+      --line: rgba(48, 66, 60, 0.16);
+      --accent: #1f6a52;
+      --accent-soft: #d8ece2;
+      --warn: #a85b2a;
+      --warn-soft: #f8e3d2;
+      --shadow: 0 22px 50px rgba(31, 42, 38, 0.12);
+      --radius: 20px;
+      --radius-sm: 12px;
+      --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Noto Sans CJK SC", sans-serif;
+      --font-serif: "STSong", "Songti SC", "Noto Serif CJK SC", serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(31, 106, 82, 0.16), transparent 36%),
+        radial-gradient(circle at top right, rgba(168, 91, 42, 0.12), transparent 28%),
+        linear-gradient(180deg, #f7f2e8 0%, #f0ebde 100%);
+      color: var(--text);
+      font-family: var(--font-sans);
+    }
+
+    body {
+      padding: 28px;
+      overflow: hidden;
+    }
+
+    .shell {
+      max-width: 1480px;
+      margin: 0 auto;
+      height: calc(100vh - 56px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(360px, 0.9fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .workspace {
+      padding: 26px;
+      height: 100%;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+    }
+
+    .preview {
+      padding: 24px;
+      height: 100%;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 22px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-family: var(--font-serif);
+      font-size: clamp(30px, 4vw, 42px);
+      line-height: 1.08;
+      letter-spacing: 0.02em;
+    }
+
+    .hero p {
+      margin: 12px 0 0;
+      max-width: 720px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .hero-tag {
+      align-self: flex-start;
+      white-space: nowrap;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      background: var(--panel-strong);
+      font: inherit;
+      color: var(--text);
+      transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+    }
+
+    .field textarea {
+      min-height: 108px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .date-shell {
+      position: relative;
+    }
+
+    .date-shell input[type="text"] {
+      padding-right: 64px;
+    }
+
+    .date-picker-button {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 46px;
+      height: 36px;
+      padding: 7px 10px;
+      border-radius: 10px;
+      background: rgba(31, 106, 82, 0.12);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: none;
+    }
+
+    .date-picker-button:hover,
+    .date-picker-button:focus,
+    .date-picker-button:active {
+      transform: translateY(-50%);
+      box-shadow: none;
+    }
+
+    .date-picker-popover {
+      position: fixed;
+      width: 288px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(31, 42, 38, 0.12);
+      background: rgba(255, 251, 243, 0.98);
+      box-shadow: 0 24px 48px rgba(31, 42, 38, 0.18);
+      backdrop-filter: blur(14px);
+      z-index: 2000;
+    }
+
+    .date-picker-popover[hidden] {
+      display: none;
+    }
+
+    .date-picker-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .date-picker-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .date-picker-nav {
+      display: inline-flex;
+      gap: 8px;
+    }
+
+    .date-picker-nav button,
+    .date-picker-day {
+      border-radius: 10px;
+      box-shadow: none;
+    }
+
+    .date-picker-nav button {
+      min-width: 34px;
+      height: 34px;
+      padding: 0;
+      background: rgba(31, 106, 82, 0.1);
+      color: var(--accent);
+      font-size: 16px;
+    }
+
+    .date-picker-weekdays,
+    .date-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .date-picker-weekdays {
+      margin-bottom: 8px;
+    }
+
+    .date-picker-weekdays span {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .date-picker-day {
+      min-width: 0;
+      height: 36px;
+      padding: 0;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .date-picker-day:hover {
+      background: rgba(31, 106, 82, 0.08);
+    }
+
+    .date-picker-day.is-today {
+      border-color: rgba(31, 106, 82, 0.22);
+    }
+
+    .date-picker-day.is-selected {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .date-picker-empty {
+      height: 36px;
+    }
+
+    .date-picker-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .date-picker-actions button {
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: rgba(31, 106, 82, 0.08);
+      color: var(--accent);
+      font-size: 12px;
+      box-shadow: none;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: rgba(31, 106, 82, 0.44);
+      box-shadow: 0 0 0 3px rgba(31, 106, 82, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+    }
+
+    button:not(.date-picker-button):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(31, 42, 38, 0.12);
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .secondary {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--line);
+    }
+
+    .module {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px dashed var(--line);
+    }
+
+    .module:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .module-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .module-head h2 {
+      margin: 0;
+      font-family: var(--font-serif);
+      font-size: 26px;
+    }
+
+    .module-head span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .section-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.58);
+      border: 1px solid rgba(31, 42, 38, 0.08);
+    }
+
+    .section-picker .field {
+      min-width: min(100%, 360px);
+      flex: 1 1 320px;
+    }
+
+    .active-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .active-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .active-tag button {
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 999px;
+      background: rgba(31, 106, 82, 0.18);
+      color: var(--accent);
+    }
+
+    .module-empty-note {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.65);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      border: 1px dashed rgba(31, 42, 38, 0.12);
+    }
+
+    .section {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.52);
+      border: 1px solid rgba(31, 42, 38, 0.08);
+      overflow: hidden;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .section-head h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .section-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .rows {
+      display: grid;
+      gap: 12px;
+    }
+
+    .row-card {
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(31, 42, 38, 0.08);
+      background: rgba(255, 250, 244, 0.85);
+      animation: rise 180ms ease;
+      width: 100%;
+      overflow: hidden;
+      container-type: inline-size;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .row-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .row-layout {
+      display: grid;
+      gap: 14px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .row-line {
+      display: grid;
+      gap: 14px;
+      align-items: start;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .row-line > * {
+      min-width: 0;
+    }
+
+    .row-line.meta-line {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .row-line.meta-line > :nth-child(1) {
+      order: 1;
+    }
+
+    .row-line.meta-line > :nth-child(4) {
+      order: 2;
+    }
+
+    .row-line.meta-line > :nth-child(2) {
+      order: 3;
+    }
+
+    .row-line.meta-line > :nth-child(3) {
+      order: 4;
+    }
+
+    .row-line.detail-line,
+    .row-line.result-line {
+      grid-template-columns: 1fr;
+    }
+
+    .row-panel {
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid rgba(31, 42, 38, 0.08);
+      width: 100%;
+      min-width: 0;
+    }
+
+    .row-panel .field {
+      height: 100%;
+      min-width: 0;
+    }
+
+    .field textarea.tall {
+      min-height: 180px;
+      resize: vertical;
+    }
+
+    .inline-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .tiny-button {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .danger {
+      background: #f6ddd3;
+      color: #8f3a14;
+    }
+
+    .preview-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .preview-head h2 {
+      margin: 0;
+      font-size: 22px;
+      font-family: var(--font-serif);
+    }
+
+    .filename {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      word-break: break-all;
+    }
+
+    .summary,
+    .alerts {
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(31, 42, 38, 0.08);
+    }
+
+    .alerts {
+      background: var(--warn-soft);
+      border-color: rgba(168, 91, 42, 0.16);
+      color: #5e351d;
+    }
+
+    .summary strong,
+    .alerts strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .summary ul,
+    .alerts ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #1e2522;
+      color: #f4f0e5;
+      border-radius: 18px;
+      padding: 18px;
+      min-height: 420px;
+      line-height: 1.65;
+      overflow: auto;
+      font-family: "Cascadia Code", "Consolas", monospace;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .muted-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    @container (max-width: 960px) {
+      .row-line.meta-line {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @container (max-width: 560px) {
+      .row-line.meta-line {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 1180px) {
+      body {
+        overflow: auto;
+      }
+
+      .shell {
+        height: auto;
+        grid-template-columns: 1fr;
+      }
+
+      .workspace,
+      .preview {
+        height: auto;
+        overflow: visible;
+      }
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 16px;
+      }
+
+      .meta-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .hero {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .meta-grid,
+      .row-line.meta-line,
+      .row-line.detail-line,
+      .row-line.result-line {
+        grid-template-columns: 1fr;
+      }
+
+      .workspace,
+      .preview {
+        padding: 18px;
+      }
+
+      .actions,
+      .section-tools {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="card workspace">
+      <div class="hero">
+        <div>
+          <h1>周报填写页</h1>
+          <p>面向部门人员填写个人周工作总结，页面直接生成符合当前仓库规范的 Markdown 周报。结构固定为“本周工作 / 下周工作”两大模块，每个模块下包含 6 个业务板块。</p>
+        </div>
+        <div class="hero-tag">MD EXPORT</div>
+      </div>
+
+      <div class="meta-grid">
+        <div class="field">
+          <label for="reporterName">姓名</label>
+          <input id="reporterName" name="reporterName" type="text" placeholder="例如：郭思文">
+        </div>
+        <div class="field">
+          <label for="periodStart">填报周期开始</label>
+          <div class="date-shell">
+            <input id="periodStart" name="periodStart" type="text" placeholder="yyyy/mm/dd" autocomplete="off">
+            <button class="date-picker-button" type="button" id="periodStartPicker">日历</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="periodEnd">填报周期结束</label>
+          <div class="date-shell">
+            <input id="periodEnd" name="periodEnd" type="text" placeholder="yyyy/mm/dd" autocomplete="off">
+            <button class="date-picker-button" type="button" id="periodEndPicker">日历</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="secondary" type="button" id="fillCurrentCycle">填入最近周报周期</button>
+        <button class="ghost" type="button" id="clearAll">清空所有内容</button>
+      </div>
+
+      <div id="modules"></div>
+    </section>
+
+    <aside class="card preview">
+      <div class="preview-head">
+        <div>
+          <h2>Markdown 预览</h2>
+          <div class="filename" id="filenamePreview">文件名：未生成</div>
+        </div>
+        <div class="actions" style="margin: 0;">
+          <button class="primary" type="button" id="downloadMd">下载 .md</button>
+          <button class="ghost" type="button" id="copyMd">复制内容</button>
+        </div>
+      </div>
+
+      <div class="summary">
+        <strong>当前导出规则</strong>
+        <ul>
+          <li>`本周工作` 使用 6 列表格，保留 `工作成果`。</li>
+          <li>`下周工作` 使用 5 列表格，不写 `工作成果`。</li>
+          <li>只导出你已选择的业务板块；未选择的板块由后续校验和汇总流程默认视为 `无`。</li>
+          <li>文件名按 `人名工作周报YYYYMMDD.md` 生成。</li>
+        </ul>
+      </div>
+
+      <div class="alerts">
+        <strong>导出前检查</strong>
+        <ul id="validationList">
+          <li>请先填写姓名和填报周期。</li>
+        </ul>
+      </div>
+
+      <pre id="markdownPreview"></pre>
+      <p class="muted-note">页面为单文件原型，直接双击打开即可使用。导出时未选择的业务板块不会写入 Markdown，后续由 `validate-report` 和 `merge-reports` 按“缺失即无”的规则处理。</p>
+    </aside>
+  </div>
+  <div id="datePickerPopover" class="date-picker-popover" hidden></div>
+
+  <script>
+    const sections = ["金融研发", "寄递研发", "管理赋能", "数据分析", "信息资源管理", "队伍建设及业绩融合"];
+    const modules = [
+      { key: "thisWeek", title: "本周工作", columns: ["项目名称", "开始时间", "结束时间", "当前状态", "工作内容", "工作成果"] },
+      { key: "nextWeek", title: "下周工作", columns: ["项目名称", "开始时间", "结束时间", "当前状态", "工作内容"] }
+    ];
+    const statusOptions = ["已完成", "进行中", "已提交待确认", "已上线", "已提测", "待启动"];
+
+    const state = {
+      thisWeek: {},
+      nextWeek: {}
+    };
+
+    const el = {
+      reporterName: document.getElementById("reporterName"),
+      periodStart: document.getElementById("periodStart"),
+      periodStartPicker: document.getElementById("periodStartPicker"),
+      periodEnd: document.getElementById("periodEnd"),
+      periodEndPicker: document.getElementById("periodEndPicker"),
+      modules: document.getElementById("modules"),
+      markdownPreview: document.getElementById("markdownPreview"),
+      filenamePreview: document.getElementById("filenamePreview"),
+      validationList: document.getElementById("validationList"),
+      datePickerPopover: document.getElementById("datePickerPopover")
+    };
+
+    const pickerState = {
+      anchor: null,
+      input: null,
+      applyValue: null,
+      month: null
+    };
+
+    function escapePipes(value) {
+      return String(value || "").replace(/\|/g, "\\|").trim();
+    }
+
+    function padDatePart(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function toIsoDate(value) {
+      const normalized = String(value || "").trim().replaceAll(".", "/").replaceAll("-", "/");
+      const match = normalized.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+      if (!match) {
+        return "";
+      }
+      const [, year, month, day] = match;
+      const iso = `${year}-${padDatePart(month)}-${padDatePart(day)}`;
+      const parsed = new Date(`${iso}T00:00:00`);
+      if (Number.isNaN(parsed.getTime())) {
+        return "";
+      }
+      if (
+        parsed.getFullYear() !== Number(year) ||
+        parsed.getMonth() + 1 !== Number(month) ||
+        parsed.getDate() !== Number(day)
+      ) {
+        return "";
+      }
+      return iso;
+    }
+
+    function formatDate(date) {
+      return `${date.getFullYear()}/${padDatePart(date.getMonth() + 1)}/${padDatePart(date.getDate())}`;
+    }
+
+    function formatDateDisplay(value) {
+      const iso = toIsoDate(value);
+      return iso ? iso.replaceAll("-", "/") : String(value || "").trim();
+    }
+
+    function formatDisplayFromParts(year, month, day) {
+      return `${year}/${padDatePart(month)}\/${padDatePart(day)}`.replace("\\/", "/");
+    }
+
+    function startOfMonth(date) {
+      return new Date(date.getFullYear(), date.getMonth(), 1);
+    }
+
+    function sameDay(a, b) {
+      return a && b &&
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate();
+    }
+
+    function closeDatePicker() {
+      el.datePickerPopover.hidden = true;
+      el.datePickerPopover.innerHTML = "";
+      pickerState.anchor = null;
+      pickerState.input = null;
+      pickerState.applyValue = null;
+      pickerState.month = null;
+    }
+
+    function positionDatePicker() {
+      if (!pickerState.anchor || el.datePickerPopover.hidden) {
+        return;
+      }
+      const rect = pickerState.anchor.getBoundingClientRect();
+      const panel = el.datePickerPopover;
+      const panelWidth = 288;
+      const panelHeight = panel.offsetHeight || 320;
+      let left = rect.right - panelWidth;
+      let top = rect.bottom + 8;
+
+      if (left + panelWidth > window.innerWidth - 12) {
+        left = window.innerWidth - panelWidth - 12;
+      }
+      if (left < 12) {
+        left = 12;
+      }
+
+      if (top + panelHeight > window.innerHeight - 12) {
+        top = rect.top - panelHeight - 8;
+      }
+      if (top < 12) {
+        top = 12;
+      }
+
+      panel.style.left = `${left}px`;
+      panel.style.top = `${top}px`;
+    }
+
+    function renderDatePicker() {
+      if (!pickerState.month || !pickerState.input) {
+        closeDatePicker();
+        return;
+      }
+
+      const monthDate = startOfMonth(pickerState.month);
+      const selectedDate = parseDateValue(pickerState.input.value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const weekdays = ["一", "二", "三", "四", "五", "六", "日"];
+
+      const panel = el.datePickerPopover;
+      panel.innerHTML = "";
+
+      const head = document.createElement("div");
+      head.className = "date-picker-head";
+
+      const title = document.createElement("div");
+      title.className = "date-picker-title";
+      title.textContent = `${monthDate.getFullYear()}年${monthDate.getMonth() + 1}月`;
+
+      const nav = document.createElement("div");
+      nav.className = "date-picker-nav";
+
+      const prevBtn = document.createElement("button");
+      prevBtn.type = "button";
+      prevBtn.textContent = "‹";
+      prevBtn.addEventListener("click", () => {
+        pickerState.month = new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, 1);
+        renderDatePicker();
+      });
+
+      const nextBtn = document.createElement("button");
+      nextBtn.type = "button";
+      nextBtn.textContent = "›";
+      nextBtn.addEventListener("click", () => {
+        pickerState.month = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1);
+        renderDatePicker();
+      });
+
+      nav.appendChild(prevBtn);
+      nav.appendChild(nextBtn);
+      head.appendChild(title);
+      head.appendChild(nav);
+      panel.appendChild(head);
+
+      const weekRow = document.createElement("div");
+      weekRow.className = "date-picker-weekdays";
+      weekdays.forEach((label) => {
+        const cell = document.createElement("span");
+        cell.textContent = label;
+        weekRow.appendChild(cell);
+      });
+      panel.appendChild(weekRow);
+
+      const grid = document.createElement("div");
+      grid.className = "date-picker-grid";
+      const firstDayOffset = (monthDate.getDay() + 6) % 7;
+      const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+
+      for (let index = 0; index < firstDayOffset; index += 1) {
+        const empty = document.createElement("div");
+        empty.className = "date-picker-empty";
+        grid.appendChild(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "date-picker-day";
+        button.textContent = String(day);
+        const currentDate = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
+
+        if (sameDay(currentDate, today)) {
+          button.classList.add("is-today");
+        }
+        if (sameDay(currentDate, selectedDate)) {
+          button.classList.add("is-selected");
+        }
+
+        button.addEventListener("click", () => {
+          const nextValue = formatDisplayFromParts(
+            currentDate.getFullYear(),
+            currentDate.getMonth() + 1,
+            currentDate.getDate()
+          );
+          pickerState.input.value = nextValue;
+          const apply = pickerState.applyValue;
+          closeDatePicker();
+          apply(nextValue);
+        });
+        grid.appendChild(button);
+      }
+
+      panel.appendChild(grid);
+
+      const actions = document.createElement("div");
+      actions.className = "date-picker-actions";
+
+      const clearBtn = document.createElement("button");
+      clearBtn.type = "button";
+      clearBtn.textContent = "清空";
+      clearBtn.addEventListener("click", () => {
+        pickerState.input.value = "";
+        const apply = pickerState.applyValue;
+        closeDatePicker();
+        apply("");
+      });
+
+      const todayBtn = document.createElement("button");
+      todayBtn.type = "button";
+      todayBtn.textContent = "今天";
+      todayBtn.addEventListener("click", () => {
+        const nextValue = formatDisplayFromParts(today.getFullYear(), today.getMonth() + 1, today.getDate());
+        pickerState.input.value = nextValue;
+        const apply = pickerState.applyValue;
+        closeDatePicker();
+        apply(nextValue);
+      });
+
+      actions.appendChild(clearBtn);
+      actions.appendChild(todayBtn);
+      panel.appendChild(actions);
+
+      panel.hidden = false;
+      positionDatePicker();
+    }
+
+    function openDatePicker(anchor, input, applyValue) {
+      const currentIso = toIsoDate(input.value);
+      const baseDate = currentIso ? new Date(`${currentIso}T00:00:00`) : new Date();
+      baseDate.setHours(0, 0, 0, 0);
+
+      if (!el.datePickerPopover.hidden && pickerState.anchor === anchor && pickerState.input === input) {
+        closeDatePicker();
+        return;
+      }
+
+      pickerState.anchor = anchor;
+      pickerState.input = input;
+      pickerState.applyValue = applyValue;
+      pickerState.month = startOfMonth(baseDate);
+      renderDatePicker();
+    }
+
+    function setupDateProxy(displayInput, triggerButton, applyValue) {
+      const commitValue = (rawValue, normalize = true) => {
+        const nextValue = normalize ? formatDateDisplay(rawValue) : String(rawValue || "").trim();
+        displayInput.value = nextValue;
+        applyValue(nextValue);
+      };
+
+      displayInput.value = formatDateDisplay(displayInput.value);
+
+      triggerButton.addEventListener("click", () => {
+        openDatePicker(triggerButton, displayInput, (nextValue) => {
+          commitValue(nextValue);
+        });
+      });
+
+      displayInput.addEventListener("input", () => {
+        applyValue(displayInput.value);
+      });
+
+      displayInput.addEventListener("change", () => {
+        commitValue(displayInput.value);
+      });
+    }
+
+    function syncTopDateInputs() {
+      el.periodStart.value = formatDateDisplay(el.periodStart.value);
+      el.periodEnd.value = formatDateDisplay(el.periodEnd.value);
+    }
+
+    function formatDateForExport(value) {
+      return toIsoDate(value) || String(value || "").trim();
+    }
+
+    function parseDateValue(value) {
+      const iso = toIsoDate(value);
+      return iso ? new Date(`${iso}T00:00:00`) : null;
+    }
+
+    function computeRecentCycle() {
+      const now = new Date();
+      const day = now.getDay();
+      const diffToThursday = (day + 3) % 7;
+      const end = new Date(now);
+      end.setHours(0, 0, 0, 0);
+      end.setDate(now.getDate() - diffToThursday);
+      const start = new Date(end);
+      start.setDate(end.getDate() - 6);
+      return { start: formatDate(start), end: formatDate(end) };
+    }
+
+    function fileName() {
+      const name = el.reporterName.value.trim();
+      const end = (toIsoDate(el.periodEnd.value) || "").replaceAll("-", "");
+      if (!name || !end) {
+        return "文件名：未生成";
+      }
+      return `文件名：${name}工作周报${end}.md`;
+    }
+
+    function createEmptyRow(moduleKey) {
+      return {
+        projectName: "",
+        startDate: "",
+        endDate: "",
+        status: moduleKey === "nextWeek" ? "待启动" : "已完成",
+        content: "",
+        result: ""
+      };
+    }
+
+    function ensureState() {
+      modules.forEach((module) => {
+        if (!state[module.key]) {
+          state[module.key] = {};
+        }
+        sections.forEach((section) => {
+          if (!state[module.key][section]) {
+            state[module.key][section] = { active: false, rows: [] };
+          }
+        });
+      });
+    }
+
+    function renderModules() {
+      ensureState();
+      el.modules.innerHTML = "";
+
+      modules.forEach((module) => {
+        const moduleNode = document.createElement("section");
+        moduleNode.className = "module";
+
+        const moduleHead = document.createElement("div");
+        moduleHead.className = "module-head";
+        moduleHead.innerHTML = `<h2>${module.title}</h2><span>${module.key === "thisWeek" ? "填写本周期已开展事项" : "填写下一周期拟推进事项"}</span>`;
+        moduleNode.appendChild(moduleHead);
+
+          const picker = document.createElement("div");
+          picker.className = "section-picker";
+
+          const availableSections = sections.filter((section) => !state[module.key][section].active);
+
+          const field = document.createElement("div");
+          field.className = "field";
+          const label = document.createElement("label");
+          label.textContent = `${module.title} 板块选择`;
+          field.appendChild(label);
+          const select = document.createElement("select");
+          select.id = `${module.key}-section-picker`;
+          select.name = select.id;
+          label.htmlFor = select.id;
+          const placeholder = document.createElement("option");
+          placeholder.value = "";
+          placeholder.textContent = availableSections.length ? "请选择要添加的业务板块" : "全部板块已添加";
+          select.appendChild(placeholder);
+          availableSections.forEach((section) => {
+            const option = document.createElement("option");
+            option.value = section;
+            option.textContent = section;
+            select.appendChild(option);
+          });
+          select.disabled = availableSections.length === 0;
+          field.appendChild(select);
+          picker.appendChild(field);
+
+          select.addEventListener("change", () => {
+            if (!select.value) {
+              return;
+            }
+            const sectionState = state[module.key][select.value];
+            sectionState.active = true;
+            if (sectionState.rows.length === 0) {
+              sectionState.rows.push(createEmptyRow(module.key));
+            }
+            renderModules();
+            refresh();
+          });
+          moduleNode.appendChild(picker);
+
+          const activeSections = sections.filter((section) => state[module.key][section].active);
+          if (activeSections.length > 0) {
+            const tags = document.createElement("div");
+            tags.className = "active-tags";
+            activeSections.forEach((section) => {
+              const tag = document.createElement("div");
+              tag.className = "active-tag";
+              tag.innerHTML = `<span>已选 ${section}</span>`;
+              const removeTagBtn = document.createElement("button");
+              removeTagBtn.type = "button";
+              removeTagBtn.textContent = "移除";
+              removeTagBtn.addEventListener("click", () => {
+                state[module.key][section].active = false;
+                state[module.key][section].rows = [];
+                renderModules();
+                refresh();
+              });
+              tag.appendChild(removeTagBtn);
+              tags.appendChild(tag);
+            });
+            moduleNode.appendChild(tags);
+          }
+
+          if (activeSections.length === 0) {
+            const emptyNote = document.createElement("div");
+            emptyNote.className = "module-empty-note";
+          emptyNote.textContent = "当前模块还没有选择任何业务板块。未选择的板块不会写入 Markdown，后续流程默认按无处理。";
+          moduleNode.appendChild(emptyNote);
+        }
+
+        activeSections.forEach((section) => {
+          const sectionState = state[module.key][section];
+          const sectionNode = document.createElement("article");
+          sectionNode.className = "section";
+
+          const sectionHead = document.createElement("div");
+          sectionHead.className = "section-head";
+          sectionHead.innerHTML = `<h3>${section}</h3>`;
+
+          const tools = document.createElement("div");
+          tools.className = "section-tools";
+
+          const addBtn = document.createElement("button");
+          addBtn.type = "button";
+          addBtn.className = "secondary tiny-button";
+          addBtn.textContent = "新增一行";
+          addBtn.addEventListener("click", () => {
+            sectionState.rows.push(createEmptyRow(module.key));
+            renderModules();
+            refresh();
+          });
+          tools.appendChild(addBtn);
+
+          const removeSectionBtn = document.createElement("button");
+          removeSectionBtn.type = "button";
+          removeSectionBtn.className = "ghost tiny-button";
+          removeSectionBtn.textContent = "移除此板块";
+          removeSectionBtn.addEventListener("click", () => {
+            sectionState.active = false;
+            sectionState.rows = [];
+            renderModules();
+            refresh();
+          });
+          tools.appendChild(removeSectionBtn);
+
+          sectionHead.appendChild(tools);
+          sectionNode.appendChild(sectionHead);
+
+          const rowsWrap = document.createElement("div");
+          rowsWrap.className = "rows";
+
+          if (sectionState.rows.length === 0) {
+            const note = document.createElement("div");
+            note.className = "muted-note";
+            note.textContent = "这个板块已经选中，但暂时还没有记录。可以新增一行，或移除此板块。";
+            rowsWrap.appendChild(note);
+          }
+
+          sectionState.rows.forEach((row, index) => {
+            const rowNode = document.createElement("div");
+            rowNode.className = "row-card";
+            const sectionIndex = sections.indexOf(section);
+            const rowFieldPrefix = `${module.key}-${sectionIndex}-${index}`;
+
+            const top = document.createElement("div");
+            top.className = "row-top";
+            top.innerHTML = `<div class="row-title">${module.title} / ${section} / 第 ${index + 1} 行</div>`;
+
+            const removeBtn = document.createElement("button");
+            removeBtn.type = "button";
+            removeBtn.className = "danger tiny-button";
+            removeBtn.textContent = "删除";
+            removeBtn.addEventListener("click", () => {
+              sectionState.rows.splice(index, 1);
+              renderModules();
+              refresh();
+            });
+            top.appendChild(removeBtn);
+            rowNode.appendChild(top);
+
+            const layout = document.createElement("div");
+            layout.className = "row-layout";
+
+            const projectField = document.createElement("div");
+            projectField.className = "field";
+            const projectLabel = document.createElement("label");
+            projectLabel.className = "inline-label";
+            projectLabel.textContent = "项目名称";
+            const projectInput = document.createElement("input");
+            projectInput.id = `${rowFieldPrefix}-projectName`;
+            projectInput.name = projectInput.id;
+            projectInput.type = "text";
+            projectInput.placeholder = "例如：车牌寄递辅助系统";
+            projectLabel.htmlFor = projectInput.id;
+            projectField.appendChild(projectLabel);
+            projectInput.value = row.projectName || "";
+            projectInput.addEventListener("input", () => {
+              row.projectName = projectInput.value;
+              refresh();
+            });
+            projectInput.addEventListener("change", () => {
+              row.projectName = projectInput.value;
+              refresh();
+            });
+            projectField.appendChild(projectInput);
+
+            const metaLine = document.createElement("div");
+            metaLine.className = "row-line meta-line";
+            metaLine.appendChild(projectField);
+            const metaFields = [
+              { key: "startDate", label: "开始时间", type: "text", placeholder: "yyyy/mm/dd" },
+              { key: "endDate", label: "结束时间", type: "text", placeholder: "yyyy/mm/dd" },
+              { key: "status", label: "当前状态", type: "select" }
+            ];
+
+            metaFields.forEach((field) => {
+              const wrapper = document.createElement("div");
+              wrapper.className = "field";
+
+              const label = document.createElement("label");
+              label.className = "inline-label";
+              label.textContent = field.label;
+
+              let input;
+              if (field.type === "select") {
+                input = document.createElement("select");
+                statusOptions.forEach((optionValue) => {
+                  const option = document.createElement("option");
+                  option.value = optionValue;
+                  option.textContent = optionValue;
+                  if (row[field.key] === optionValue) {
+                    option.selected = true;
+                  }
+                  input.appendChild(option);
+                });
+              } else {
+                const isDateField = field.key === "startDate" || field.key === "endDate";
+                if (isDateField) {
+                  input = document.createElement("input");
+                  input.type = "text";
+                  input.placeholder = "yyyy/mm/dd";
+                  input.value = formatDateDisplay(row[field.key]);
+                } else {
+                  input = document.createElement("input");
+                  input.type = field.type;
+                  if (field.placeholder) {
+                    input.placeholder = field.placeholder;
+                  }
+                  input.value = row[field.key] || "";
+                }
+                if (field.type === "text" && !isDateField) {
+                  input.inputMode = "numeric";
+                  input.autocomplete = "off";
+                }
+              }
+              input.id = `${rowFieldPrefix}-${field.key}`;
+              input.name = input.id;
+              label.htmlFor = input.id;
+
+              wrapper.appendChild(label);
+              if (field.key === "startDate" || field.key === "endDate") {
+                const dateShell = document.createElement("div");
+                dateShell.className = "date-shell";
+                const triggerButton = document.createElement("button");
+                triggerButton.type = "button";
+                triggerButton.className = "date-picker-button";
+                triggerButton.textContent = "日历";
+                setupDateProxy(input, triggerButton, (nextValue) => {
+                  row[field.key] = nextValue;
+                  refresh();
+                });
+                dateShell.appendChild(input);
+                dateShell.appendChild(triggerButton);
+                wrapper.appendChild(dateShell);
+              } else {
+                input.addEventListener("input", () => {
+                  row[field.key] = input.value;
+                  refresh();
+                });
+                input.addEventListener("change", () => {
+                  row[field.key] = input.value;
+                  refresh();
+                });
+                wrapper.appendChild(input);
+              }
+              metaLine.appendChild(wrapper);
+            });
+
+            layout.appendChild(metaLine);
+
+            const detailLine = document.createElement("div");
+            detailLine.className = "row-line detail-line";
+
+            const contentPanel = document.createElement("div");
+            contentPanel.className = "row-panel";
+            const contentField = document.createElement("div");
+            contentField.className = "field";
+            const contentLabel = document.createElement("label");
+            contentLabel.className = "inline-label";
+            contentLabel.textContent = "工作内容";
+            const contentInput = document.createElement("textarea");
+            contentInput.id = `${rowFieldPrefix}-content`;
+            contentInput.name = contentInput.id;
+            contentInput.className = "tall";
+            contentLabel.htmlFor = contentInput.id;
+            contentField.appendChild(contentLabel);
+            contentInput.placeholder = module.key === "thisWeek" ? "详细描述本周实际开展的动作，可输入较长内容" : "详细描述下周期拟推进事项，可输入较长内容";
+            contentInput.value = row.content || "";
+            contentInput.addEventListener("input", () => {
+              row.content = contentInput.value;
+              refresh();
+            });
+            contentField.appendChild(contentInput);
+            contentPanel.appendChild(contentField);
+            detailLine.appendChild(contentPanel);
+            layout.appendChild(detailLine);
+
+            if (module.key === "thisWeek") {
+              const resultLine = document.createElement("div");
+              resultLine.className = "row-line result-line";
+
+              const resultPanel = document.createElement("div");
+              resultPanel.className = "row-panel";
+              const resultField = document.createElement("div");
+              resultField.className = "field";
+              const resultLabel = document.createElement("label");
+              resultLabel.className = "inline-label";
+              resultLabel.textContent = "工作成果";
+
+              const resultInput = document.createElement("textarea");
+              resultInput.id = `${rowFieldPrefix}-result`;
+              resultInput.name = resultInput.id;
+              resultInput.className = "tall";
+              resultInput.placeholder = "详细描述结果、产出或结论，可输入较长内容";
+              resultInput.value = row.result || "";
+              resultLabel.htmlFor = resultInput.id;
+              resultInput.addEventListener("input", () => {
+                row.result = resultInput.value;
+                refresh();
+              });
+
+              resultField.appendChild(resultLabel);
+              resultField.appendChild(resultInput);
+              resultPanel.appendChild(resultField);
+              resultLine.appendChild(resultPanel);
+              layout.appendChild(resultLine);
+            }
+
+            rowNode.appendChild(layout);
+            rowsWrap.appendChild(rowNode);
+          });
+
+          sectionNode.appendChild(rowsWrap);
+          moduleNode.appendChild(sectionNode);
+        });
+
+        el.modules.appendChild(moduleNode);
+      });
+    }
+
+    function validateForm() {
+      const messages = [];
+      const name = el.reporterName.value.trim();
+      const start = el.periodStart.value.trim();
+      const end = el.periodEnd.value.trim();
+      const startIso = toIsoDate(start);
+      const endIso = toIsoDate(end);
+
+      if (!name) {
+        messages.push("未填写姓名。");
+      }
+      if (!start || !end) {
+        messages.push("未完整填写填报周期开始和结束日期。");
+      }
+
+      if ((start && !startIso) || (end && !endIso)) {
+        messages.push("日期请输入 `yyyy/mm/dd`，导出时会自动转换为规范日期。");
+      }
+
+      if (startIso && endIso) {
+        const startDate = parseDateValue(startIso);
+        const endDate = parseDateValue(endIso);
+        const diffDays = Math.round((endDate - startDate) / 86400000);
+        if (diffDays !== 6) {
+          messages.push("填报周期开始与结束应正好相差 6 天。");
+        }
+        if (startDate.getDay() !== 5) {
+          messages.push("填报周期开始应为周五。");
+        }
+        if (endDate.getDay() !== 4) {
+          messages.push("填报周期结束应为周四。");
+        }
+      }
+
+      sections.forEach((section) => {
+        const sectionState = state.nextWeek[section];
+        if (sectionState.active && sectionState.rows.length > 0) {
+          sectionState.rows.forEach((row) => {
+            const rowStartIso = toIsoDate(row.startDate);
+            if (row.startDate && !rowStartIso) {
+              messages.push(`下周工作 > ${section} 中存在非规范日期，请使用 yyyy/mm/dd。`);
+            }
+            if (endIso && rowStartIso && rowStartIso <= endIso) {
+              messages.push(`下周工作 > ${section} 中存在开始时间未晚于填报周期结束日期的记录。`);
+            }
+          });
+        }
+      });
+
+      return messages;
+    }
+
+    function buildTable(moduleKey, rows) {
+      if (!rows.length) {
+        return "无";
+      }
+
+      const header = moduleKey === "thisWeek"
+        ? "| 项目名称 | 开始时间 | 结束时间 | 当前状态 | 工作内容 | 工作成果 |\n| --- | --- | --- | --- | --- | --- |"
+        : "| 项目名称 | 开始时间 | 结束时间 | 当前状态 | 工作内容 |\n| --- | --- | --- | --- | --- |";
+
+      const lines = rows.map((row) => {
+        if (moduleKey === "thisWeek") {
+          return `| ${escapePipes(row.projectName)} | ${escapePipes(formatDateForExport(row.startDate))} | ${escapePipes(formatDateForExport(row.endDate))} | ${escapePipes(row.status)} | ${escapePipes(row.content)} | ${escapePipes(row.result)} |`;
+        }
+        return `| ${escapePipes(row.projectName)} | ${escapePipes(formatDateForExport(row.startDate))} | ${escapePipes(formatDateForExport(row.endDate))} | ${escapePipes(row.status)} | ${escapePipes(row.content)} |`;
+      });
+
+      return `${header}\n${lines.join("\n")}`;
+    }
+
+    function buildMarkdown() {
+      const name = el.reporterName.value.trim();
+      const start = formatDateForExport(el.periodStart.value.trim());
+      const end = formatDateForExport(el.periodEnd.value.trim());
+
+      const lines = [
+        "---",
+        `姓名: ${name}`,
+        `填报周期开始: ${start}`,
+        `填报周期结束: ${end}`,
+        "---",
+        ""
+      ];
+
+      modules.forEach((module) => {
+        lines.push(`## ${module.title}`, "");
+
+        sections.forEach((section) => {
+          const sectionState = state[module.key][section];
+          if (!sectionState.active) {
+            return;
+          }
+          lines.push(`### ${section}`, "");
+          const content = buildTable(module.key, sectionState.rows);
+          lines.push(content, "");
+        });
+      });
+
+      return lines.join("\n").trimEnd() + "\n";
+    }
+
+    function refresh() {
+      const markdown = buildMarkdown();
+      const validations = validateForm();
+
+      el.markdownPreview.textContent = markdown;
+      el.filenamePreview.textContent = fileName();
+      el.validationList.innerHTML = "";
+
+      if (validations.length === 0) {
+        const ok = document.createElement("li");
+        ok.textContent = "基础检查通过，可以导出后再交给 validate-report 做正式校验。";
+        el.validationList.appendChild(ok);
+      } else {
+        validations.forEach((item) => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          el.validationList.appendChild(li);
+        });
+      }
+    }
+
+    function downloadMarkdown() {
+      const markdown = buildMarkdown();
+      const fileLabel = fileName().replace("文件名：", "").trim() || "个人工作周报.md";
+      const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = fileLabel;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function copyMarkdown() {
+      navigator.clipboard.writeText(buildMarkdown()).then(() => {
+        const oldText = document.getElementById("copyMd").textContent;
+        document.getElementById("copyMd").textContent = "已复制";
+        setTimeout(() => {
+          document.getElementById("copyMd").textContent = oldText;
+        }, 1200);
+      });
+    }
+
+    function clearAll() {
+      el.reporterName.value = "";
+      el.periodStart.value = "";
+      el.periodEnd.value = "";
+      syncTopDateInputs();
+      sections.forEach((section) => {
+        state.thisWeek[section] = { active: false, rows: [] };
+        state.nextWeek[section] = { active: false, rows: [] };
+      });
+      renderModules();
+      refresh();
+    }
+
+    function init() {
+      ensureState();
+      setupDateProxy(el.periodStart, el.periodStartPicker, (nextValue) => {
+        el.periodStart.value = nextValue;
+        refresh();
+      });
+      setupDateProxy(el.periodEnd, el.periodEndPicker, (nextValue) => {
+        el.periodEnd.value = nextValue;
+        refresh();
+      });
+      clearAll();
+
+      document.getElementById("fillCurrentCycle").addEventListener("click", () => {
+        const cycle = computeRecentCycle();
+        el.periodStart.value = cycle.start;
+        el.periodEnd.value = cycle.end;
+        syncTopDateInputs();
+        refresh();
+      });
+      document.getElementById("clearAll").addEventListener("click", clearAll);
+      document.getElementById("downloadMd").addEventListener("click", downloadMarkdown);
+      document.getElementById("copyMd").addEventListener("click", copyMarkdown);
+
+      document.addEventListener("click", (event) => {
+        if (el.datePickerPopover.hidden) {
+          return;
+        }
+        const target = event.target;
+        if (el.datePickerPopover.contains(target)) {
+          return;
+        }
+        if (pickerState.anchor && pickerState.anchor.contains(target)) {
+          return;
+        }
+        closeDatePicker();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeDatePicker();
+        }
+      });
+
+      window.addEventListener("resize", closeDatePicker);
+      document.addEventListener("scroll", closeDatePicker, true);
+
+      [el.reporterName].forEach((node) => {
+        node.addEventListener("input", refresh);
+        node.addEventListener("change", refresh);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

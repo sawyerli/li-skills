@@ -23,6 +23,10 @@
   状态：todo
   说明：为 `monthYYYYMM/weekYYYYMMDD/raw|apv|dept` 增加初始化流程，避免手工建目录。
 
+- [ ] P1 `流程`：Excel 生成功能
+  状态：todo
+  说明：支持根据个人周报校验结果或部门周报汇总结果生成 Excel 文件，便于后续分发、留档和人工复核。
+
 ## Next
 
 - [ ] P2 `validate-report`：自动生成校验结果摘要文件
